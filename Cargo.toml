@@ -36,18 +36,20 @@ version_check = "0.9"
 [dependencies]
 aho-corasick = "1.0"
 nu-ansi-term = "0.49"
-argmax = "0.3.1"
 ignore = "0.4.21"
 regex = "1.9.6"
 regex-syntax = "0.8"
-ctrlc = "3.2"
 humantime = "2.1"
 globset = "0.4"
 anyhow = "1.0"
-etcetera = "0.8"
 normpath = "1.1.1"
 crossbeam-channel = "0.5.8"
 clap_complete = {version = "4.4.4", optional = true}
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+argmax = "0.3.1"
+ctrlc = "3.2"
+etcetera = "0.8"
 faccess = "0.2.4"
 
 [dependencies.clap]
@@ -73,7 +75,7 @@ libc = "0.2"
 # FIXME: Re-enable jemalloc on macOS
 # jemalloc is currently disabled on macOS due to a bug in jemalloc in combination with macOS
 # Catalina. See https://github.com/sharkdp/fd/issues/498 for details.
-[target.'cfg(all(not(windows), not(target_os = "android"), not(target_os = "macos"), not(target_os = "freebsd"), not(target_os = "openbsd"), not(all(target_env = "musl", target_pointer_width = "32")), not(target_arch = "riscv64")))'.dependencies]
+[target.'cfg(all(not(target_family = "wasm"), not(windows), not(target_os = "android"), not(target_os = "macos"), not(target_os = "freebsd"), not(target_os = "openbsd"), not(all(target_env = "musl", target_pointer_width = "32")), not(target_arch = "riscv64")))'.dependencies]
 jemallocator = {version = "0.5.4", optional = true}
 
 [dev-dependencies]

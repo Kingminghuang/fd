@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{anyhow, Result};
 use crossbeam_channel::{bounded, Receiver, RecvTimeoutError, SendError, Sender};
+#[cfg(not(target_family = "wasm"))]
 use etcetera::BaseStrategy;
 use ignore::overrides::{Override, OverrideBuilder};
 use ignore::{self, WalkBuilder, WalkParallel, WalkState};
@@ -367,6 +368,7 @@ impl WorkerState {
             builder.add_custom_ignore_filename(".fdignore");
         }
 
+        #[cfg(not(target_family = "wasm"))]
         if config.read_global_ignore {
             if let Ok(basedirs) = etcetera::choose_base_strategy() {
                 let global_ignore_file = basedirs.config_dir().join("fd").join("ignore");
@@ -627,6 +629,7 @@ impl WorkerState {
         let config = &self.config;
         let walker = self.build_walker(paths)?;
 
+        #[cfg(not(target_family = "wasm"))]
         if config.ls_colors.is_some() && config.is_printing() {
             let quit_flag = Arc::clone(&self.quit_flag);
             let interrupt_flag = Arc::clone(&self.interrupt_flag);

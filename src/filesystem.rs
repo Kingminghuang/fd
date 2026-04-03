@@ -69,12 +69,22 @@ pub fn is_block_device(_: fs::FileType) -> bool {
     false
 }
 
+#[cfg(not(any(unix, windows, target_os = "redox")))]
+pub fn is_block_device(_: fs::FileType) -> bool {
+    false
+}
+
 #[cfg(any(unix, target_os = "redox"))]
 pub fn is_char_device(ft: fs::FileType) -> bool {
     ft.is_char_device()
 }
 
 #[cfg(windows)]
+pub fn is_char_device(_: fs::FileType) -> bool {
+    false
+}
+
+#[cfg(not(any(unix, windows, target_os = "redox")))]
 pub fn is_char_device(_: fs::FileType) -> bool {
     false
 }
@@ -89,6 +99,11 @@ pub fn is_socket(_: fs::FileType) -> bool {
     false
 }
 
+#[cfg(not(any(unix, windows, target_os = "redox")))]
+pub fn is_socket(_: fs::FileType) -> bool {
+    false
+}
+
 #[cfg(any(unix, target_os = "redox"))]
 pub fn is_pipe(ft: fs::FileType) -> bool {
     ft.is_fifo()
@@ -99,14 +114,29 @@ pub fn is_pipe(_: fs::FileType) -> bool {
     false
 }
 
+#[cfg(not(any(unix, windows, target_os = "redox")))]
+pub fn is_pipe(_: fs::FileType) -> bool {
+    false
+}
+
 #[cfg(any(unix, target_os = "redox"))]
-pub fn osstr_to_bytes(input: &OsStr) -> Cow<[u8]> {
+pub fn osstr_to_bytes(input: &OsStr) -> Cow<'_, [u8]> {
     use std::os::unix::ffi::OsStrExt;
     Cow::Borrowed(input.as_bytes())
 }
 
 #[cfg(windows)]
-pub fn osstr_to_bytes(input: &OsStr) -> Cow<[u8]> {
+pub fn osstr_to_bytes(input: &OsStr) -> Cow<'_, [u8]> {
+    let string = input.to_string_lossy();
+
+    match string {
+        Cow::Owned(string) => Cow::Owned(string.into_bytes()),
+        Cow::Borrowed(string) => Cow::Borrowed(string.as_bytes()),
+    }
+}
+
+#[cfg(not(any(unix, windows, target_os = "redox")))]
+pub fn osstr_to_bytes(input: &OsStr) -> Cow<'_, [u8]> {
     let string = input.to_string_lossy();
 
     match string {

@@ -684,6 +684,52 @@ cargo test
 cargo install --path .
 ```
 
+### Building for WASIX
+
+`fd` can also be built for WASIX with [`cargo-wasix`](https://github.com/wasix-org/cargo-wasix):
+
+```bash
+cargo wasix build --release
+```
+
+Current WASIX limitations:
+
+- `jemallocator` is disabled.
+- `-x` / `--exec` is not supported.
+- `-X` / `--exec-batch` is not supported.
+- `-t x` / `--type executable` is not supported.
+
+### Completions
+
+#### From Release Archives
+
+Pre-built completion files are included in the release archives (`.tar.gz`/`.zip`) on the
+[Releases page](https://github.com/sharkdp/fd/releases), in the `autocomplete` directory.
+To use these completions:
+
+- **bash**: Source the `fd.bash` file in your `~/.bashrc`, or place it in a directory that gets sourced automatically.
+- **zsh**: Move `_fd` to a directory in your `fpath` (e.g., `~/.zfunc`).
+- **fish**: Copy `fd.fish` to `~/.config/fish/completions/`.
+- **powershell**: Source `_fd.ps1` from one of your [profile scripts](https://learn.microsoft.com/en-us/powershell/scripting/learn/shell/creating-profiles?view=powershell-7.5).
+
+#### Generate from fd
+
+You can also generate completions directly using `fd --gen-completions <shell>`:
+
+```bash
+# Bash
+fd --gen-completions bash > ~/.local/share/bash-completion/completions/fd
+
+# Zsh (ensure ~/.zfunc is in your fpath)
+fd --gen-completions zsh > ~/.zfunc/_fd
+
+# Fish
+fd --gen-completions fish > ~/.config/fish/completions/fd.fish
+
+# PowerShell
+fd --gen-completions powershell >> $PROFILE
+```
+
 ## Maintainers
 
 - [sharkdp](https://github.com/sharkdp)

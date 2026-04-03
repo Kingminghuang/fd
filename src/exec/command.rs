@@ -2,7 +2,7 @@ use std::io;
 use std::io::Write;
 use std::sync::Mutex;
 
-use argmax::Command;
+use crate::process_command::Command;
 
 use crate::error::print_error;
 use crate::exit_codes::ExitCode;

@@ -1,6 +1,7 @@
 use crate::dir_entry;
 use crate::filesystem;
 
+#[cfg(not(target_family = "wasm"))]
 use faccess::PathExt;
 
 /// Whether or not to show
@@ -27,7 +28,7 @@ impl FileTypes {
                 || (!self.char_devices && filesystem::is_char_device(*entry_type))
                 || (!self.sockets && filesystem::is_socket(*entry_type))
                 || (!self.pipes && filesystem::is_pipe(*entry_type))
-                || (self.executables_only && !entry.path().executable())
+                || (self.executables_only && !path_is_executable(entry.path()))
                 || (self.empty_only && !filesystem::is_empty(entry))
                 || !(entry_type.is_file()
                     || entry_type.is_dir()
@@ -40,4 +41,14 @@ impl FileTypes {
             true
         }
     }
+}
+
+#[cfg(not(target_family = "wasm"))]
+fn path_is_executable(path: &std::path::Path) -> bool {
+    path.executable()
+}
+
+#[cfg(target_family = "wasm")]
+fn path_is_executable(_: &std::path::Path) -> bool {
+    false
 }

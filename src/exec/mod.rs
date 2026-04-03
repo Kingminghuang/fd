@@ -11,8 +11,8 @@ use std::path::{Component, Path, PathBuf, Prefix};
 use std::process::Stdio;
 use std::sync::Mutex;
 
+use crate::process_command::Command;
 use anyhow::{bail, Result};
-use argmax::Command;
 
 use crate::exit_codes::{merge_exitcodes, ExitCode};
 

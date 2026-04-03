@@ -34,6 +34,7 @@ pub struct Config {
     pub require_git_to_read_vcsignore: bool,
 
     /// Whether to respect the global ignore file or not.
+    #[cfg_attr(target_family = "wasm", allow(dead_code))]
     pub read_global_ignore: bool,
 
     /// Whether to follow symlinks or not.
@@ -74,6 +75,7 @@ pub struct Config {
     pub ls_colors: Option<LsColors>,
 
     /// Whether or not we are writing to an interactive terminal
+    #[cfg_attr(target_family = "wasm", allow(dead_code))]
     pub interactive_terminal: bool,
 
     /// The type of file to search for. If set to `None`, all file types are displayed. If

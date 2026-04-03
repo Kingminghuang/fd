@@ -8,6 +8,7 @@ mod filesystem;
 mod filetypes;
 mod filter;
 mod output;
+mod process_command;
 mod regex_helper;
 mod walk;
 
@@ -36,6 +37,7 @@ use crate::regex_helper::{pattern_has_uppercase_char, pattern_matches_strings_wi
 // We use jemalloc for performance reasons, see https://github.com/sharkdp/fd/pull/481
 // FIXME: re-enable jemalloc on macOS, see comment in Cargo.toml file for more infos
 #[cfg(all(
+    not(target_family = "wasm"),
     not(windows),
     not(target_os = "android"),
     not(target_os = "macos"),
@@ -210,6 +212,10 @@ fn construct_config(mut opts: Opts, pattern_regexps: &[String]) -> Result<Config
     let time_constraints = extract_time_constraints(&opts)?;
     #[cfg(unix)]
     let owner_constraint: Option<OwnerFilter> = opts.owner.and_then(OwnerFilter::filter_ignore);
+    #[cfg(any(unix, windows))]
+    let one_file_system = opts.one_file_system;
+    #[cfg(not(any(unix, windows)))]
+    let one_file_system = false;
 
     #[cfg(windows)]
     let ansi_colors_support =
@@ -248,7 +254,7 @@ fn construct_config(mut opts: Opts, pattern_regexps: &[String]) -> Result<Config
             || opts.rg_alias_ignore()
             || opts.no_global_ignore_file),
         follow_links: opts.follow,
-        one_file_system: opts.one_file_system,
+        one_file_system,
         null_separator: opts.null_separator,
         quiet: opts.quiet,
         max_depth: opts.max_depth(),
@@ -258,34 +264,44 @@ fn construct_config(mut opts: Opts, pattern_regexps: &[String]) -> Result<Config
         max_buffer_time: opts.max_buffer_time,
         ls_colors,
         interactive_terminal,
-        file_types: opts.filetype.as_ref().map(|values| {
-            use crate::cli::FileType::*;
-            let mut file_types = FileTypes::default();
-            for value in values {
-                match value {
-                    File => file_types.files = true,
-                    Directory => file_types.directories = true,
-                    Symlink => file_types.symlinks = true,
-                    Executable => {
-                        file_types.executables_only = true;
-                        file_types.files = true;
+        file_types: opts
+            .filetype
+            .as_ref()
+            .map(|values| {
+                use crate::cli::FileType::*;
+                let mut file_types = FileTypes::default();
+                for value in values {
+                    match value {
+                        File => file_types.files = true,
+                        Directory => file_types.directories = true,
+                        Symlink => file_types.symlinks = true,
+                        Executable => {
+                            #[cfg(target_family = "wasm")]
+                            bail!("'--type executable' is not supported on this platform.");
+
+                            #[cfg(not(target_family = "wasm"))]
+                            {
+                                file_types.executables_only = true;
+                                file_types.files = true;
+                            }
+                        }
+                        Empty => file_types.empty_only = true,
+                        BlockDevice => file_types.block_devices = true,
+                        CharDevice => file_types.char_devices = true,
+                        Socket => file_types.sockets = true,
+                        Pipe => file_types.pipes = true,
                     }
-                    Empty => file_types.empty_only = true,
-                    BlockDevice => file_types.block_devices = true,
-                    CharDevice => file_types.char_devices = true,
-                    Socket => file_types.sockets = true,
-                    Pipe => file_types.pipes = true,
                 }
-            }
 
-            // If only 'empty' was specified, search for both files and directories:
-            if file_types.empty_only && !(file_types.files || file_types.directories) {
-                file_types.files = true;
-                file_types.directories = true;
-            }
+                // If only 'empty' was specified, search for both files and directories:
+                if file_types.empty_only && !(file_types.files || file_types.directories) {
+                    file_types.files = true;
+                    file_types.directories = true;
+                }
 
-            file_types
-        }),
+                Ok::<FileTypes, anyhow::Error>(file_types)
+            })
+            .transpose()?,
         extensions: opts
             .extensions
             .as_ref()
